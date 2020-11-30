@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My Experiment</title>
+    <!-- Charger jspsych -->
+    <script src="jspsych-6.1.0/jspsych.js"></script>
+    <script src="jspsych-6.1.0/plugins/jspsych-fullscreen.js"></script>
+    <script src="stimuli_short.js"></script>
+    <script src="aq_items.js"></script>
+    <!-- Chager le plugin permettant de montrer du texte à l'écran -->
+    <script src="jspsych-6.1.0/plugins/jspsych-html-keyboard-response.js"></script>
+    <script src="jspsych-6.1.0/plugins/jspsych-survey-likert.js"></script>
+    <!-- Charger un package de styles pour améliorer le visuel de la page -->
+    <link href="jspsych-6.1.0/css/jspsych.css" rel="stylesheet" type="text/css"></link>
+  </head>
+  <body></body>
+  <!-- À partir d'ici on va déclarer les variables de la tâche -->
+  <script>
+
+var timeline = [];
+
+var instructions = {
+  type: "html-keyboard-response",
+  choices: ['enter'],
+  stimulus:"<p><div style='font-size:30px;'>Une liste de situations va vous "+
+      "être présentée.<p>Pour chacune d'entre elles, vous allez devoir sélectionner "+
+      "la réponse qui vous correspond le mieux.</p>"+
+      "<p><div style = 'color: #CC0000;'>Appuyez sur la touche <strong>ENTRÉE</strong> pour commencer la tâche.</div></p>"
+};
+
+var scale = ["Pas du tout d'accord", "Plutôt pas d'accord", "Plutôt d'accord", "Tout à fait d'accord"];
+var aq = {
+  type: 'survey-likert',
+  questions:function(){
+    return[
+      {prompt: "<strong>"+jsPsych.timelineVariable('Prompt',true)
+      +"</strong>", labels: scale, required: true, scale_width: 'null'}
+    ]
+  },
+
+  on_finish: function(data){
+    data.question_number = jsPsych.timelineVariable('number',true);
+    data.subscale = jsPsych.timelineVariable('Subscale',true);
+    data.reversed = jsPsych.timelineVariable('Reverse',true);
+    var likert = JSON.parse(data.responses);
+    var likert_Q0 = likert.Q0;
+    data.likert = likert_Q0+1;
+    if(data.reversed == "Y"){
+      data.on_4_points = 5-data.likert;}
+      else {
+        data.on_4_points = data.likert;}
+    if(data.reversed == "Y"){
+      data.on_2_points = 1-((((3-data.likert)/3)+(1/2))*
+      (data.likert-2)*(data.likert-1));}
+      else {
+        data.on_2_points = (((3-data.likert)/3)+(1/2))*
+      (data.likert-2)*(data.likert-1);}
+  }
+};
+
+var loop_node = {
+    timeline: [aq],
+    timeline_variables: items,
+    loop_function: function(data){
+        if(jsPsych.data.getLastTrialData().values()[0].trial_index != 50){
+            return true;
+        } else {
+            return false;
+        }
+    }
+};
+
+var end = {
+  type: 'html-keyboard-response',
+  stimulus: "<p><div style='font-size:30px;'>Fin du questionnaire</p>",
+  trial_duration: 1500
+};
+
+timeline.push({
+  type: 'fullscreen',
+  fullscreen_mode: true
+});
+timeline.push(instructions);
+timeline.push(loop_node);
+timeline.push(end);
+timeline.push({
+  type: 'fullscreen',
+  fullscreen_mode: false,
+  on_finish: function(data) {
+    var total_trial = jsPsych.data.get();
+    var total_aq_on_2_points = total_trial.select('on_2_points').sum();
+
+    var social_skills_trials = jsPsych.data.get().filter({subscale: 'Social Skills'});
+    var social_skill_score_on_2_points = social_skills_trials.select('on_2_points').sum();
+
+    var attention_switching_trials = jsPsych.data.get().filter({subscale: 'Attention Switching'});
+    var attention_switching_score_on_2_points = attention_switching_trials.select('on_2_points').sum();
+
+    var imagination_trials = jsPsych.data.get().filter({subscale: 'Imagination'});
+    var imagination_score_on_2_points = imagination_trials.select('on_2_points').sum();
+
+    var attention_detail_trials = jsPsych.data.get().filter({subscale: 'Attention Detail'});
+    var attention_detail_score_on_2_points = attention_detail_trials.select('on_2_points').sum();
+
+    var communication_trials = jsPsych.data.get().filter({subscale: 'Communication'});
+    var communication_score_on_2_points = communication_trials.select('on_2_points').sum();
+
+    var total_trial = jsPsych.data.get();
+    var total_aq_on_4_points = total_trial.select('on_4_points').sum();
+
+    var social_skills_trials = jsPsych.data.get().filter({subscale: 'Social Skills'});
+    var social_skill_score_on_4_points = social_skills_trials.select('on_4_points').sum();
+
+    var attention_switching_trials = jsPsych.data.get().filter({subscale: 'Attention Switching'});
+    var attention_switching_score_on_4_points = attention_switching_trials.select('on_4_points').sum();
+
+    var imagination_trials = jsPsych.data.get().filter({subscale: 'Imagination'});
+    var imagination_score_on_4_points = imagination_trials.select('on_4_points').sum();
+
+    var attention_detail_trials = jsPsych.data.get().filter({subscale: 'Attention Detail'});
+    var attention_detail_score_on_4_points = attention_detail_trials.select('on_4_points').sum();
+
+    var communication_trials = jsPsych.data.get().filter({subscale: 'Communication'});
+    var communication_score_on_4_points = communication_trials.select('on_4_points').sum();
+
+    jsPsych.data.addProperties({total_aq_on_4_points:total_aq_on_4_points});
+    jsPsych.data.addProperties({total_ss_on_4_points:social_skill_score_on_4_points});
+    jsPsych.data.addProperties({total_as_on_4_points:attention_switching_score_on_4_points});
+    jsPsych.data.addProperties({total_im_on_4_points:imagination_score_on_4_points});
+    jsPsych.data.addProperties({total_ad_on_4_points:attention_detail_score_on_4_points});
+    jsPsych.data.addProperties({total_ad_on_4_points:communication_score_on_4_points});
+
+    jsPsych.data.addProperties({total_aq_on_2_points:total_aq_on_2_points});
+    jsPsych.data.addProperties({total_ss_on_2_points:social_skill_score_on_2_points});
+    jsPsych.data.addProperties({total_as_on_2_points:attention_switching_score_on_2_points});
+    jsPsych.data.addProperties({total_im_on_2_points:imagination_score_on_2_points});
+    jsPsych.data.addProperties({total_ad_on_2_points:attention_detail_score_on_2_points});
+    jsPsych.data.addProperties({total_ad_on_2_points:communication_score_on_2_points});
+
+    jsPsych.data.displayData('csv')
+    }
+  });
+jsPsych.init({
+  timeline: timeline,
+});
+</script>
+<html>
